@@ -1,14 +1,13 @@
 import os
-import sys
 import re
 
 
-def rename_files(directory, extension):
+def rename_files(directory):
     files = os.listdir(directory)
     renamed_files = []
 
     for file in files:
-        if file.endswith(extension):
+        if file.endswith(('.pdf', '.epub')):
             # Replace spaces with underscores
             new_name = file.replace(' ', '_')
             # Replace /, \, and ' characters with '-'
@@ -16,7 +15,7 @@ def rename_files(directory, extension):
             # Remove "dokumet.pub_"
             new_name = new_name.replace('dokumet.pub_', '')
             # Remove 20 digits before extension
-            new_name = re.sub(r'\d{20}(?=\.{})'.format(extension), '', new_name)
+            new_name = re.sub(r'\d{20}(?=\.{})'.format(re.escape(os.path.splitext(file)[1])), '', new_name)
 
             # Rename file
             if new_name != file:
@@ -36,12 +35,11 @@ def create_registry(directory):
 
 
 if __name__ == "__main__":
-    # Получаем путь к директории и расширение файла из аргументов командной строки
-    directory_path = sys.argv[1]
-    file_extension = sys.argv[2]
+    # Указываем директорию для поиска файлов
+    directory_path = '/data'
 
     # Изменение имен файлов
-    renamed_files = rename_files(directory_path, file_extension)
+    renamed_files = rename_files(directory_path)
     print("Имена файлов изменены:", renamed_files)
 
     # Создание реестра
