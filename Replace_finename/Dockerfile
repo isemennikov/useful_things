@@ -10,5 +10,7 @@ COPY . /app
 # Make script executable
 RUN chmod +x renamefile.py
 
+
 # Run the script when the container launches
 CMD ["python", "./renamefile.py"]
+
