@@ -15,8 +15,12 @@ def rename_files(directory):
             new_name = re.sub(r'[\/\'\\]', '-', new_name)
             # Remove "dokumet.pub_"
             new_name = new_name.replace('dokumet.pub_', '')
-            # Remove 20 digits before extension
-            new_name = re.sub(r'\d{20}(?=\.{})'.format(re.escape(os.path.splitext(file)[1][1:] if os.path.splitext(file)[1] else '')),'', new_name)
+
+            # Check if the file has an extension
+            if '.' in file:
+                # Remove 20 digits before extension
+                extension = os.path.splitext(file)[1]
+                new_name = re.sub(r'\d{20}(?={})'.format(re.escape(extension[1:])), '', new_name)
 
             # Rename file
             if new_name != file:
