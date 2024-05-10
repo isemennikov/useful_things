@@ -15,7 +15,7 @@ def rename_files(directory):
             new_name = re.sub(r'[\/\'\\]', '-', new_name)
             new_name = new_name.replace('dokumet.pub_', '')
 
-            # Удаление 8-12 символов из чисел и знака "-" перед расширением файла
+            # Удаление последовательности от 8 до 12 символов из чисел и знака "-" перед расширением файла
             new_name = re.sub(r'[-\d]{8,12}(?=\{})'.format(re.escape(file_type)), '', new_name)
 
             # Переименование файла
@@ -26,10 +26,10 @@ def rename_files(directory):
     return renamed_files
 
 def create_registry(directory, renamed_files):
-    total_files = len(renamed_files)  # Общее количество переименованных файлов
+    total_files = len([file for file in os.listdir(directory) if file.lower().endswith(('.pdf', '.epub'))])
     with open(os.path.join(directory, 'registry.txt'), 'w') as f:
         # Запись общего количества файлов
-        f.write(f"Общее количество переименованных файлов: {total_files}\n\n")
+        f.write(f"Общее количество файлов: {total_files}\n\n")
         # Запись реестра файлов
         for file in renamed_files:
             file_size_mb = os.path.getsize(os.path.join(directory, file)) / (1024 * 1024)  # Размер в мегабайтах
@@ -43,6 +43,6 @@ if __name__ == "__main__":
     renamed_files = rename_files(directory_path)
     print("Имена файлов изменены:", renamed_files)
 
-    # Создание реестра с подсчетом общего количества переименованных файлов
+    # Создание реестра с подсчетом общего количества файлов
     create_registry(directory_path, renamed_files)
     print("Реестр файлов создан.")
