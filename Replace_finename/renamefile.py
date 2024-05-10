@@ -36,11 +36,6 @@ def create_registry(directory):
 
 
 if __name__ == "__main__":
-    # Проверяем, что передан корректный аргумент командной строки
-    if len(sys.argv) != 3:
-        print("Usage: python your_script.py <directory_path> <file_extension>")
-        sys.exit(1)
-
     # Получаем путь к директории и расширение файла из аргументов командной строки
     directory_path = sys.argv[1]
     file_extension = sys.argv[2]
