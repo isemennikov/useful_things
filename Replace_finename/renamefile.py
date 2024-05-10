@@ -14,7 +14,7 @@ def rename_files(directory):
         lower_file = file.lower()
         file_type = '.pdf' if '.pdf' in lower_file else '.epub' if '.epub' in lower_file else None
         if file_type:
-            new_name = re.sub(r'(\d+-){0,4}\d{1,12}(?=\{})|[/\'\\]|\s'.format(re.escape(file_type)),
+            new_name = re.sub(r'(\d+-){{0,4}{\d{{1,12}}(?=\{})|[/\'\\]|\s'.format(re.escape(file_type)),
                               lambda m: '_' if m.group(0).isspace() else '', file)
 
             new_path = os.path.join(directory, new_name)
