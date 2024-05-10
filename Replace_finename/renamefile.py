@@ -16,7 +16,7 @@ def rename_files(directory):
             new_name = new_name.replace('dokumet.pub_', '')
 
             # Удаление последовательности от 8 до 12 символов из чисел и знака "-" перед расширением файла
-            new_name = re.sub(r'[-\d]{8,12}(?=\{})'.format(re.escape(file_type)), '', new_name)
+            new_name = re.sub(r'[-\d]{{8,12}}(?=\.{})'.format(re.escape(file_type)), '', new_name)
 
             # Переименование файла
             if new_name != file:
