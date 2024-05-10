@@ -2,11 +2,7 @@ import os
 import re
 import sys
 
-import os
-import re
 
-dimport os
-import re
 
 def rename_files(directory):
     files = os.listdir(directory)
