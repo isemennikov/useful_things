@@ -43,17 +43,26 @@ func main() {
             fileName = strings.TrimPrefix(fileName, "dokumen.pub_")
         }
 
-        if _, err := os.Stat(filepath.Join(dir, fileName)); err == nil {
-            fileName = strings.TrimSuffix(fileName, ext) + "_duplicate_" + ext
+        // Обрезаем имя файла до 40 символов, если необходимо
+        if len(fileName) > 60 {
+            fileName = fileName[:60-len(ext)] + ext
+        }
+
+        newFilePath := filepath.Join(dir, fileName)
+        if _, err := os.Stat(newFilePath); !os.IsNotExist(err) {
+            fileName = strings.TrimSuffix(fileName, ext) + "_duplicate" + ext
+            newFilePath = filepath.Join(dir, fileName)
         }
 
         if originalFileName != fileName {
-            err := os.Rename(filepath.Join(dir, originalFileName), filepath.Join(dir, fileName))
+            err := os.Rename(filepath.Join(dir, originalFileName), newFilePath)
             if err != nil {
                 errorContent += fmt.Sprintf("Error renaming %s to %s: %s\n", originalFileName, fileName, err)
                 continue
             }
             fmt.Printf("Renamed %s to %s\n", originalFileName, fileName)
+        } else {
+            fmt.Printf("No need to rename %s\n", originalFileName)
         }
 
         fileSizeMB := float64(file.Size()) / (1024 * 1024)
@@ -72,7 +81,7 @@ func main() {
 
     fmt.Println(registryContent)
     if errorContent != "" {
-        fmt.Printf("Completed with some errors. Please check the error log.\n")
+        fmt.Printf("Completed with errors. Please check the error log above.\n")
     } else {
         fmt.Printf("Program completed successfully. All files have been processed.\n")
     }
