@@ -22,7 +22,7 @@ def rename_files(directory):
         # Remove "dokumet.pub_"
         new_name = new_name.replace('dokumet.pub_', '')
         # Remove 20 digits before extension
-        new_name = re.sub(r'\d{20}(?={})'.format(file_type), '', new_name)
+        new_name = re.sub(r'\d{{20}}(?={})'.format(file_type), '', new_name)
 
         # Rename file
         if new_name != file:
