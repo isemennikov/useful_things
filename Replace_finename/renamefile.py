@@ -9,29 +9,36 @@ def rename_files(directory):
     for file in files:
         if file.lower().endswith(('.pdf', '.epub')):
             file_type = '.pdf' if file.lower().endswith('.pdf') else '.epub'
+            new_name = file
 
-            # Замена пробелов и нежелательных символов
-            new_name = file.replace(' ', '_')
-            new_name = re.sub(r'[\/\'\\]', '-', new_name)
-            new_name = new_name.replace('dokumet.pub_', '')
+            # Проверка на наличие 'dokumen.pub_' и последовательности из чисел и дефисов
+            if 'dokumen.pub_' in file or re.search(r'[-\d]{4,12}', file):
+                new_name = new_name.replace('dokumen.pub_', '')
+                new_name = re.sub(r'[-\d]{{8,12}}(?=\.{})'.format(re.escape(file_type)), '', new_name)
+            else:
+                # Если условия не совпадают, просто заменяем пробелы и нежелательные символы
+                new_name = new_name.replace(' ', '_')
+                new_name = re.sub(r'[\/\'\\]', '-', new_name)
 
-            # Удаление последовательности от 8 до 12 символов из чисел и знака "-" перед расширением файла
-            new_name = re.sub(r'[-\d]{{8,12}}(?=\.{})'.format(re.escape(file_type)), '', new_name)
-
-            # Переименование файла
+            # Переименование файла, если оно необходимо
             if new_name != file:
                 os.rename(os.path.join(directory, file), os.path.join(directory, new_name))
                 renamed_files.append(new_name)
 
     return renamed_files
 
+
 def create_registry(directory, renamed_files):
-    total_files = len([file for file in os.listdir(directory) if file.lower().endswith(('.pdf', '.epub'))])
+    # Получаем список всех PDF и EPUB файлов
+    all_files = [file for file in os.listdir(directory) if file.lower().endswith(('.pdf', '.epub'))]
+    total_files = len(all_files)
+
     with open(os.path.join(directory, 'registry.txt'), 'w') as f:
-        # Запись общего количества файлов
+        # Запись общего количества файлов в шапку файла
         f.write(f"Общее количество файлов: {total_files}\n\n")
+
         # Запись реестра файлов
-        for file in renamed_files:
+        for file in all_files:
             file_size_mb = os.path.getsize(os.path.join(directory, file)) / (1024 * 1024)  # Размер в мегабайтах
             f.write(f"{file}: {file_size_mb:.2f} MB\n")
 
