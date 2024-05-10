@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 
 
@@ -35,15 +36,19 @@ def create_registry(directory):
 
 
 if __name__ == "__main__":
-    # Путь к директории искомых файлов
-    search_directory = input("Введите путь к директории поиска файлов: ")
-    # Расширение файлов
-    file_extension = input("Введите расширение файлов для поиска (например, '.pdf'): ")
+    # Проверяем, что передан корректный аргумент командной строки
+    if len(sys.argv) != 3:
+        print("Usage: python your_script.py <directory_path> <file_extension>")
+        sys.exit(1)
+
+    # Получаем путь к директории и расширение файла из аргументов командной строки
+    directory_path = sys.argv[1]
+    file_extension = sys.argv[2]
 
     # Изменение имен файлов
-    renamed_files = rename_files(search_directory, file_extension)
+    renamed_files = rename_files(directory_path, file_extension)
     print("Имена файлов изменены:", renamed_files)
 
     # Создание реестра
-    create_registry(search_directory)
+    create_registry(directory_path)
     print("Реестр файлов создан.")
