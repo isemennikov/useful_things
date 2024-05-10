@@ -53,6 +53,7 @@ func main() {
                 errorContent += fmt.Sprintf("Error renaming %s to %s: %s\n", originalFileName, fileName, err)
                 continue
             }
+            fmt.Printf("Renamed %s to %s\n", originalFileName, fileName)
         }
 
         fileSizeMB := float64(file.Size()) / (1024 * 1024)
@@ -67,6 +68,13 @@ func main() {
     err = ioutil.WriteFile(filepath.Join(dir, "registry.txt"), []byte(registryContent), 0644)
     if err != nil {
         log.Fatal(err)
+    }
+
+    fmt.Println(registryContent)
+    if errorContent != "" {
+        fmt.Printf("Completed with some errors. Please check the error log.\n")
+    } else {
+        fmt.Printf("Program completed successfully. All files have been processed.\n")
     }
 }
 
