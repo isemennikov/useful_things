@@ -1,32 +1,33 @@
 import os
 import re
-import sys
-
-
 
 def rename_files(directory):
+    if not os.path.isdir(directory):
+        return 'Указанная директория не существует или недоступна.'
+
     files = os.listdir(directory)
     renamed_files = []
+    errors = []
 
     for file in files:
-        if file.lower().endswith(('.pdf', '.epub')):
-            file_type = '.pdf' if file.lower().endswith('.pdf') else '.epub'
-            new_name = file
+        lower_file = file.lower()
+        if lower_file.endswith(('.pdf', '.epub')):
+            file_type = '.pdf' if lower_file.endswith('.pdf') else '.epub'
+            new_name = file.replace('dokumen.pub_', '')
 
-            # Удаление 'dokumen.pub_' и последовательности цифр и дефисов перед расширением файла
-            new_name = new_name.replace('dokumen.pub_', '')
-            new_name = re.sub(r'(\d+-)*\d{{8,12}}(?=\.{})'.format(re.escape(file_type)), '', new_name)
+            # Одно выражение для всех замен
+            new_name = re.sub(r'(\d+-){0,4}\d{1,12}(?=\.{})|[\/\'\\]| '.format(re.escape(file_type)),
+                              lambda m: '_' if m.group(0) == ' ' else '', new_name)
 
-            # Замена пробелов на подчеркивания и удаление нежелательных символов
-            new_name = new_name.replace(' ', '_')
-            new_name = re.sub(r'[\/\'\\]', '-', new_name)
+            new_path = os.path.join(directory, new_name)
+            if new_name != file and not os.path.exists(new_path):
+                try:
+                    os.rename(os.path.join(directory, file), new_path)
+                    renamed_files.append(new_name)
+                except OSError as e:
+                    errors.append(f'Ошибка при переименовании файла {file}: {e}')
 
-            # Переименование файла, если оно необходимо
-            if new_name != file:
-                os.rename(os.path.join(directory, file), os.path.join(directory, new_name))
-                renamed_files.append(new_name)
-
-    return renamed_files
+    return renamed_files, errors if errors else 'Все файлы успешно переименованы.'
 
 
 def create_registry(directory, renamed_files):
