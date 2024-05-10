@@ -5,6 +5,9 @@ import sys
 import os
 import re
 
+dimport os
+import re
+
 def rename_files(directory):
     files = os.listdir(directory)
     renamed_files = []
@@ -16,7 +19,7 @@ def rename_files(directory):
 
             # Удаление 'dokumen.pub_' и последовательности цифр и дефисов перед расширением файла
             new_name = new_name.replace('dokumen.pub_', '')
-            new_name = re.sub(r'[-\d]{{8,12}}(?=\.{})'.format(re.escape(file_type)), '', new_name)
+            new_name = re.sub(r'(\d+-)*\d{{8,12}}(?=\.{})'.format(re.escape(file_type)), '', new_name)
 
             # Замена пробелов на подчеркивания и удаление нежелательных символов
             new_name = new_name.replace(' ', '_')
