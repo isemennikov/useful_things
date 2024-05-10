@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 
 def rename_files(directory):
