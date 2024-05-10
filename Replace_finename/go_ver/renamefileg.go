@@ -1,7 +1,10 @@
 package main
 
 import (
+    "crypto/md5"
+    "encoding/hex"
     "fmt"
+    "io"
     "io/ioutil"
     "log"
     "os"
@@ -65,8 +68,14 @@ func main() {
             fmt.Printf("No need to rename %s\n", originalFileName)
         }
 
+        hash, err := hashFileMD5(newFilePath)
+        if err != nil {
+            fmt.Printf("Error calculating hash for %s: %s\n", fileName, err)
+            continue
+        }
+
         fileSizeMB := float64(file.Size()) / (1024 * 1024)
-        registryContent += fmt.Sprintf("%s - %.2f MB\n", fileName, fileSizeMB)
+        registryContent += fmt.Sprintf("%s --- %s --- %.2f MB\n", fileName, hash[len(hash)-8:], fileSizeMB)
     }
 
     registryContent = fmt.Sprintf("Total PDF and EPUB files: %d\n\n%s", pdfEpubCount, registryContent)
@@ -95,4 +104,22 @@ func sanitizeRune(r rune) rune {
         return r
     }
     return '-'
+}
+
+func hashFileMD5(filePath string) (string, error) {
+    var returnMD5String string
+    file, err := os.Open(filePath)
+    if err != nil {
+        return returnMD5String, err
+    }
+    defer file.Close()
+
+    hash := md5.New()
+    if _, err := io.Copy(hash, file); err != nil {
+        return returnMD5String, err
+    }
+
+    hashInBytes := hash.Sum(nil)[:16]
+    returnMD5String = hex.EncodeToString(hashInBytes)
+    return returnMD5String, nil
 }
