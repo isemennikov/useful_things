@@ -26,7 +26,7 @@ def rename_files(directory):
             # Убедимся, что имя файла оканчивается на правильное расширение
             if not new_name.endswith(file_extension):
                 new_name += file_extension
-
+#
             new_path = os.path.join(directory, new_name)
             if new_name != file:
                 if not os.path.exists(new_path):
