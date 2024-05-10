@@ -8,25 +8,26 @@ def rename_files(directory):
     renamed_files = []
 
     for file in files:
-        if file.endswith(('.pdf', '.epub')):
-            # Replace spaces with underscores
-            new_name = file.replace(' ', '_')
-            # Replace /, \, and ' characters with '-'
-            new_name = re.sub(r'[\/\'\\]', '-', new_name)
-            # Remove "dokumet.pub_"
-            new_name = new_name.replace('dokumet.pub_', '')
+        if file[-3:] == 'pdf':
+            file_type = 'pdf'
+        elif file[-4:] == 'epub':
+            file_type = 'epub'
+        else:
+            continue
 
-            # Check if the file has an extension
-            if '.' in file:
-                # Remove 20 digits before extension
-                extension = os.path.splitext(file)[1]
-                new_name = re.sub(r'\d{20}(?={})'.format(re.escape(extension[1:]) if extension else ''), '', new_name)
+        # Replace spaces with underscores
+        new_name = file.replace(' ', '_')
+        # Replace /, \, and ' characters with '-'
+        new_name = re.sub(r'[\/\'\\]', '-', new_name)
+        # Remove "dokumet.pub_"
+        new_name = new_name.replace('dokumet.pub_', '')
+        # Remove 20 digits before extension
+        new_name = re.sub(r'\d{20}(?={})'.format(file_type), '', new_name)
 
-
-            # Rename file
-            if new_name != file:
-                os.rename(os.path.join(directory, file), os.path.join(directory, new_name))
-                renamed_files.append(new_name)
+        # Rename file
+        if new_name != file:
+            os.rename(os.path.join(directory, file), os.path.join(directory, new_name))
+            renamed_files.append(new_name)
 
     return renamed_files
 
