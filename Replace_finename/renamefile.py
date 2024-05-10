@@ -20,7 +20,8 @@ def rename_files(directory):
             if '.' in file:
                 # Remove 20 digits before extension
                 extension = os.path.splitext(file)[1]
-                new_name = re.sub(r'\d{20}(?={})'.format(re.escape(extension[1:])), '', new_name)
+                new_name = re.sub(r'\d{20}(?={})'.format(re.escape(extension[1:]) if extension else ''), '', new_name)
+
 
             # Rename file
             if new_name != file:
