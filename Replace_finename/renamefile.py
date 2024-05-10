@@ -2,6 +2,10 @@ import os
 import re
 import sys
 
+import os
+import re
+import sys
+
 def rename_files(directory):
     if not os.path.isdir(directory):
         return 'Указанная директория не существует или недоступна.', []
@@ -9,23 +13,31 @@ def rename_files(directory):
     files = os.listdir(directory)
     renamed_files = []
     errors = []
+    file_type_pattern = re.compile(r'\.pdf$|\.epub$', re.IGNORECASE)
 
     for file in files:
-        lower_file = file.lower()
-        file_type = '.pdf' if '.pdf' in lower_file else '.epub' if '.epub' in lower_file else None
-        if file_type:
-            new_name = re.sub(r'(\d+-){{0,4}{\d{{1,12}}(?=\{})|[/\'\\]|\s'.format(re.escape(file_type)),
-                              lambda m: '_' if m.group(0).isspace() else '', file)
+        if file_type_pattern.search(file):
+            file_extension = file_type_pattern.search(file).group()
+            new_name = file.replace('dokumen.pub_', '')
+
+            # Регулярное выражение для замены нежелательных символов и последовательностей
+            new_name = re.sub(r'(\d+-){{0,4}}\d{{1,12}}|[/\'\\]|\s', lambda m: '_' if m.group(0).isspace() else '', new_name)
+
+            # Убедимся, что имя файла оканчивается на правильное расширение
+            if not new_name.endswith(file_extension):
+                new_name += file_extension
 
             new_path = os.path.join(directory, new_name)
-            if new_name != file and not os.path.exists(new_path):
-                try:
-                    os.rename(os.path.join(directory, file), new_path)
-                    renamed_files.append(new_name)
-                except OSError as e:
-                    errors.append(f'Ошибка при переименовании файла {file}: {e}')
-            elif os.path.exists(new_path):
-                errors.append(f'Файл с новым именем {new_name} уже существует.')
+            if new_name != file:
+                if not os.path.exists(new_path):
+                    try:
+                        os.rename(os.path.join(directory, file), new_path)
+                        renamed_files.append(new_name)
+                    except OSError as e:
+                        errors.append(f'Ошибка при переименовании файла {file}: {e}')
+                # Если файл с таким именем уже существует, пропускаем его
+            else:
+                errors.append(f'Файл {file} уже имеет требуемое имя и не был изменен.')
 
     return renamed_files, errors
 
@@ -63,7 +75,7 @@ if __name__ == "__main__":
     if renamed_files:
         print("Имена файлов изменены:", renamed_files)
     if errors:
-        print("При переименовании возникли ошибки:", errors)
+        print("При переименовании возникли ошибки:\n - " + "\n - ".join(errors))
 
     create_registry(directory_path, renamed_files)
     print("Реестр файлов создан.")
