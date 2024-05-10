@@ -36,7 +36,7 @@ def create_registry(directory):
 
 if __name__ == "__main__":
     # Указываем директорию для поиска файлов
-    directory_path = '/data'
+    directory_path = sys.argv[1]
 
     # Изменение имен файлов
     renamed_files = rename_files(directory_path)
