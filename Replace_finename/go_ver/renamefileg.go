@@ -24,13 +24,8 @@ func main() {
     }
 
     var registryContent strings.Builder
-    var errorContent strings.Builder
     pdfEpubCount := 0
-    totalFilesCount := 0
-
-    // Добавление заголовков столбцов в registryContent
-    registryContent.WriteString(fmt.Sprintf("%-70s\t%-8s\t%10s\n", "Filename", "Hash", "Size(MB)"))
-    registryContent.WriteString(strings.Repeat("-", 70) + "\t" + strings.Repeat("-", 8) + "\t" + strings.Repeat("-", 10) + "\n")
+    renamedFilesCount := 0
 
     for _, file := range files {
         if file.IsDir() {
@@ -43,88 +38,37 @@ func main() {
             continue
         }
 
-        totalFilesCount++
-        if strings.Contains(fileName, "_duplicate") {
-            pdfEpubCount++
-            continue // Пропускаем файлы с _duplicate в имени
-        }
-
+        pdfEpubCount++
         originalFilePath := filepath.Join(dir, fileName)
-        fileName = sanitizeAndShortenFileName(fileName, ext, 60) // Удаление префикса и сокращение имени файла
+        fileName = sanitizeAndShortenFileName(fileName, ext, 60)
 
-        newFilePath := originalFilePath
-        if needRename(fileName) {
-            fileName, newFilePath, err = renameFile(dir, fileName, ext)
-            if err != nil {
-                errorContent.WriteString(fmt.Sprintf("Error renaming %s: %s\n", fileName, err))
+        newFilePath := filepath.Join(dir, fileName)
+        if _, err := os.Stat(newFilePath); os.IsNotExist(err) && originalFilePath != newFilePath {
+            if err := os.Rename(originalFilePath, newFilePath); err != nil {
+                log.Printf("Error renaming %s: %s\n", originalFilePath, err)
                 continue
             }
-            fmt.Printf("Renamed to %s\n", fileName)
+            renamedFilesCount++
         }
 
         hash, err := hashFileMD5(newFilePath)
         if err != nil {
-            errorContent.WriteString(fmt.Sprintf("Error calculating hash for %s: %s\n", fileName, err))
+            log.Printf("Error calculating hash for %s: %s\n", fileName, err)
             continue
         }
-
+        
         fileSizeMB := float64(file.Size()) / (1024 * 1024)
-        registryContent.WriteString(fmt.Sprintf("%-70s\t%-8s\t%.2f MB\n", fileName, hash[len(hash)-8:], fileSizeMB))
-        pdfEpubCount++
+        registryContent.WriteString(fmt.Sprintf("%-70s %-8s %.2f MB\n", fileName, hash[len(hash)-8:], fileSizeMB))
     }
 
-    // Вывод общего количества файлов в начало registryContent
-    totalFilesContent := fmt.Sprintf("Total PDF and EPUB files: %d\n\n", totalFilesCount)
-    registryContent.WriteString(totalFilesContent)
+    registryHeader := fmt.Sprintf("\nTotal PDF and EPUB files: %d\n\n", pdfEpubCount)
+    registryContent.WriteString(registryHeader)
 
-    if errorContent.Len() > 0 {
-        fmt.Printf("Completed with errors. Please check the error log in registry.txt.\n")
-    } else {
-        fmt.Printf("Program completed successfully. All files have been processed and listed in registry.txt.\n")
-    }
-
-    // Запись в файл registry.txt
-    err = ioutil.WriteFile(filepath.Join(dir, "registry.txt"), []byte(registryContent.String()), 0644)
-    if err != nil {
+    if err := ioutil.WriteFile(filepath.Join(dir, "registry.txt"), []byte(registryContent.String()), 0644); err != nil {
         log.Fatal(err)
     }
-}
 
-func needRename(fileName string) bool {
-    return strings.Contains(fileName, " ") || strings.HasPrefix(fileName, "dokumen.pub_")
-}
-
-func renameFile(dir, fileName, ext string) (newFileName, newFilePath string, err error) {
-    newFileName = strings.Replace(fileName, " ", "_", -1)
-    newFileName = strings.Map(sanitizeRune, newFileName)
-    if strings.HasPrefix(newFileName, "dokumen.pub_") {
-        newFileName = strings.TrimPrefix(newFileName, "dokumen.pub_")
-    }
-    newFileName = shortenFileName(newFileName, 60, ext)
-
-    newFilePath = filepath.Join(dir, newFileName)
-    if newFileName != fileName {
-        err = os.Rename(filepath.Join(dir, fileName), newFilePath)
-    }
-    return
-}
-
-func hashFileMD5(filePath string) (string, error) {
-    var returnMD5String string
-    file, err := os.Open(filePath)
-    if err != nil {
-        return returnMD5String, err
-    }
-    defer file.Close()
-
-    hash := md5.New()
-    if _, err := io.Copy(hash, file); err != nil {
-        return returnMD5String, err
-    }
-
-    hashInBytes := hash.Sum(nil)[:16]
-    returnMD5String = hex.EncodeToString(hashInBytes)
-    return returnMD5String, nil
+    fmt.Printf("Program completed successfully. Total files processed: %d. Total files renamed: %d. The results are listed in registry.txt.\n", pdfEpubCount, renamedFilesCount)
 }
 
 func sanitizeAndShortenFileName(fileName, ext string, maxLength int) string {
@@ -149,3 +93,24 @@ func sanitizeRune(r rune) rune {
     }
     return '-'
 }
+
+func hashFileMD5(filePath string) (string, error) {
+    var returnMD5String string
+    file, err := os.Open(filePath)
+    if err != nil {
+        return returnMD5String, err
+    }
+    defer file.Close()
+
+    hash := md5.New()
+    if _, err := io.Copy(hash, file); err != nil {
+        return returnMD5String, err
+    }
+
+    hashInBytes := hash.Sum(nil)[:16]
+    returnMD5String = hex.EncodeToString(hashInBytes)
+    return returnMD5String, nil
+}
+
+
+// ... остальные функции остаются без изменений ...
