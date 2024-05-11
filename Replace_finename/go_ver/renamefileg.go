@@ -26,12 +26,11 @@ func main() {
     var registryContent strings.Builder
     var errorContent strings.Builder
     pdfEpubCount := 0
-    hashColumnWidth := 8
-    sizeColumnWidth := 10
+    totalFilesCount := 0
 
-    // Заголовки столбцов для registryContent
-    registryContent.WriteString(fmt.Sprintf("%-40s %-8s %10s\n", "Filename", "Hash", "Size(MB)"))
-    registryContent.WriteString(strings.Repeat("-", 40) + " " + strings.Repeat("-", hashColumnWidth) + " " + strings.Repeat("-", sizeColumnWidth) + "\n")
+    // Добавление заголовков столбцов в registryContent
+    registryContent.WriteString(fmt.Sprintf("%-70s\t%-8s\t%10s\n", "Filename", "Hash", "Size(MB)"))
+    registryContent.WriteString(strings.Repeat("-", 70) + "\t" + strings.Repeat("-", 8) + "\t" + strings.Repeat("-", 10) + "\n")
 
     for _, file := range files {
         if file.IsDir() {
@@ -44,41 +43,40 @@ func main() {
             continue
         }
 
-        pdfEpubCount++
-        originalFileName := fileName
-        // Очистка и сокращение имени файла
-        fileName = sanitizeAndShortenFileName(fileName, ext)
-
-        newFilePath := filepath.Join(dir, fileName)
-        // Проверка на дублирование и переименование при необходимости
-        if _, err := os.Stat(newFilePath); !os.IsNotExist(err) {
-            fileName = strings.TrimSuffix(fileName, ext) + "_duplicate" + ext
-            newFilePath = filepath.Join(dir, fileName)
+        totalFilesCount++
+        if strings.Contains(fileName, "_duplicate") {
+            pdfEpubCount++
+            continue // Пропускаем файлы с _duplicate в имени
         }
 
-        // Переименование файла
-        if originalFileName != fileName {
-            err := os.Rename(filepath.Join(dir, originalFileName), newFilePath)
+        originalFilePath := filepath.Join(dir, fileName)
+        fileName = sanitizeAndShortenFileName(fileName, ext, 60) // Удаление префикса и сокращение имени файла
+
+        newFilePath := originalFilePath
+        if needRename(fileName) {
+            fileName, newFilePath, err = renameFile(dir, fileName, ext)
             if err != nil {
-                errorContent.WriteString(fmt.Sprintf("Error renaming %s to %s: %s\n", originalFileName, fileName, err))
+                errorContent.WriteString(fmt.Sprintf("Error renaming %s: %s\n", fileName, err))
                 continue
             }
+            fmt.Printf("Renamed to %s\n", fileName)
         }
 
-        // Вычисление хеша файла
         hash, err := hashFileMD5(newFilePath)
         if err != nil {
             errorContent.WriteString(fmt.Sprintf("Error calculating hash for %s: %s\n", fileName, err))
             continue
         }
 
-        // Вычисление размера файла
         fileSizeMB := float64(file.Size()) / (1024 * 1024)
-        // Форматирование вывода в столбики
-        registryContent.WriteString(fmt.Sprintf("%-40s %-8s %*.2f MB\n", trimFileName(fileName, 40), hash[len(hash)-hashColumnWidth:], sizeColumnWidth, fileSizeMB))
+        registryContent.WriteString(fmt.Sprintf("%-70s\t%-8s\t%.2f MB\n", fileName, hash[len(hash)-8:], fileSizeMB))
+        pdfEpubCount++
     }
 
-    fmt.Printf("Processed %d PDF and EPUB files.\n", pdfEpubCount)
+    // Вывод общего количества файлов в начало registryContent
+    totalFilesContent := fmt.Sprintf("Total PDF and EPUB files: %d\n\n", totalFilesCount)
+    registryContent.WriteString(totalFilesContent)
+
     if errorContent.Len() > 0 {
         fmt.Printf("Completed with errors. Please check the error log in registry.txt.\n")
     } else {
@@ -92,29 +90,25 @@ func main() {
     }
 }
 
-// Функции для очистки имени файла и его сокращения
-func sanitizeAndShortenFileName(fileName, ext string) string {
-    fileName = strings.Replace(fileName, " ", "_", -1)
-    fileName = strings.Map(sanitizeRune, fileName)
-    if strings.HasPrefix(fileName, "dokumen.pub_") {
-        fileName = strings.TrimPrefix(fileName, "dokumen.pub_")
-    }
-    // Обрезаем имя файла до 40 символов, если необходимо
-    if len(fileName) > 60 {
-        fileName = fileName[:60-len(ext)] + ext
-    }
-    return fileName
+func needRename(fileName string) bool {
+    return strings.Contains(fileName, " ") || strings.HasPrefix(fileName, "dokumen.pub_")
 }
 
-// Функция для обрезания имени файла до заданной длины
-func trimFileName(fileName string, maxLength int) string {
-    if len(fileName) <= maxLength {
-        return fileName
+func renameFile(dir, fileName, ext string) (newFileName, newFilePath string, err error) {
+    newFileName = strings.Replace(fileName, " ", "_", -1)
+    newFileName = strings.Map(sanitizeRune, newFileName)
+    if strings.HasPrefix(newFileName, "dokumen.pub_") {
+        newFileName = strings.TrimPrefix(newFileName, "dokumen.pub_")
     }
-    return fileName[:maxLength]
+    newFileName = shortenFileName(newFileName, 60, ext)
+
+    newFilePath = filepath.Join(dir, newFileName)
+    if newFileName != fileName {
+        err = os.Rename(filepath.Join(dir, fileName), newFilePath)
+    }
+    return
 }
 
-// Функция для получения MD5-хеша файла
 func hashFileMD5(filePath string) (string, error) {
     var returnMD5String string
     file, err := os.Open(filePath)
@@ -133,11 +127,23 @@ func hashFileMD5(filePath string) (string, error) {
     return returnMD5String, nil
 }
 
-// Функция для фильтрации разрешенных символов в имени файла
-func sanitizeRune(r rune) rune {
-    if r == ' ' {
-        return '_'
+func sanitizeAndShortenFileName(fileName, ext string, maxLength int) string {
+    fileName = strings.Replace(fileName, " ", "_", -1)
+    fileName = strings.Map(sanitizeRune, fileName)
+    if strings.HasPrefix(fileName, "dokumen.pub_") {
+        fileName = strings.TrimPrefix(fileName, "dokumen.pub_")
     }
+    return shortenFileName(fileName, maxLength, ext)
+}
+
+func shortenFileName(fileName string, maxLength int, ext string) string {
+    if len(fileName) > maxLength {
+        fileName = fileName[:maxLength-len(ext)] + ext
+    }
+    return fileName
+}
+
+func sanitizeRune(r rune) rune {
     if r == '.' || r == '-' || r == '_' || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
         return r
     }

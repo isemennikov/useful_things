@@ -1,0 +1,4 @@
+github.com/google/uuid v1.3.0 h1:V3Z3sfQf1+XdeUPzA2W+7tNHPkpDkFLThOjZYZvk8NM=
+github.com/google/uuid v1.3.0/go.mod h1:1Jb4Otzgk9eEqTybDmUC2zXUfW5llVI//Wrr/XBiVUc=
+golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 h1:Z+mp6M3Q6P81u1M+6oGD5DfAlkX8er0kVxjX5Rm3G7I=
+golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
