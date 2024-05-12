@@ -10,6 +10,7 @@ FROM golang:${GO_VERSION}-${OS_VERSION} AS base
 # git & make install 
 RUN apk update && apk add --no-cache git make
 
+
 # clone vt repo and install app
 RUN git clone https://github.com/VirusTotal/vt-cli.git /vt-cli \
     && cd /vt-cli \
@@ -38,4 +39,6 @@ RUN --mount=type=secret,id=apikey \
 ENTRYPOINT [ "vt" ]
 
 # default list --help
+
+
 CMD ["help"]
