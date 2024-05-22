@@ -23,6 +23,8 @@ ENV PATH=$PATH:$GOBIN
 # create finish image wich contains base alpine image
 FROM alpine:latest
 
+USER 1001:1001
+
 #copy exfiles 
 COPY --from=base /go/bin/vt /usr/local/bin/vt
 
