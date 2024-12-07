@@ -6,5 +6,5 @@ The script runs in a container
 For running need build docker image from Dockerfile  *docker build -t name:tag .*
 
 
-Command for running *docker run -ti --rm -v $(pwd):/files renamefiles:1 /files*
+Command for running *docker run -ti --rm -v $(pwd):/files IMAGENAME /files*
 I recommend using the Go version. Python version is not very good and works slowly
